@@ -10,22 +10,7 @@ export interface UserProfile {
   carbonSaved: number;
   points: number;
   badges: string[];
-  sosContacts: SOSContact[];
-  createdAt: string;
-}
-
-export interface SOSContact {
-  name: string;
-  phone: string;
-}
-
-export interface Notification {
-  id: string;
-  userId: string;
-  type: 'ride_match' | 'ride_cancelled' | 'rider_joined' | 'rider_left';
-  message: string;
-  rideId?: string;
-  read: boolean;
+  cancellations: number;
   createdAt: string;
 }
 

@@ -16,6 +16,7 @@
         "carbonSaved": { "type": "number", "description": "The total amount of carbon (kg) saved by the user." },
         "points": { "type": "integer", "description": "The user's total reward points." },
         "badges": { "type": "array", "items": { "type": "string" }, "description": "List of earned badges." },
+        "cancellations": { "type": "integer", "description": "The total number of ride cancellations by the user." },
         "createdAt": { "type": "string", "format": "date-time", "description": "When the user account was created." }
       },
       "required": ["uid", "displayName", "email", "role", "isVerified"]

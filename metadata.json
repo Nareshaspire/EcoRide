@@ -1,0 +1,5 @@
+{
+  "name": "EcoRide",
+  "description": "A sustainable carpooling platform connecting commuters to reduce carbon footprint and travel costs.",
+  "requestFramePermissions": ["geolocation"]
+}

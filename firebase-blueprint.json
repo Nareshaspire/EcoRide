@@ -1,0 +1,97 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile information for drivers and riders.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique ID of the user." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "photoURL": { "type": "string", "description": "The URL of the user's profile picture." },
+        "role": { "type": "string", "enum": ["driver", "rider", "both"], "description": "The user's role in the carpooling system." },
+        "isVerified": { "type": "boolean", "description": "Whether the user's account is verified." },
+        "rating": { "type": "number", "description": "The user's average rating." },
+        "totalRides": { "type": "integer", "description": "The total number of rides the user has participated in." },
+        "carbonSaved": { "type": "number", "description": "The total amount of carbon (kg) saved by the user." },
+        "points": { "type": "integer", "description": "The user's total reward points." },
+        "badges": { "type": "array", "items": { "type": "string" }, "description": "List of earned badges." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user account was created." }
+      },
+      "required": ["uid", "displayName", "email", "role", "isVerified"]
+    },
+    "RecurringTrip": {
+      "title": "Recurring Trip Schedule",
+      "description": "A regular commute schedule for a user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique ID of the recurring trip." },
+        "userId": { "type": "string", "description": "The ID of the user." },
+        "role": { "type": "string", "enum": ["driver", "rider"], "description": "The role for this recurring trip." },
+        "origin": { "type": "string", "description": "The starting location." },
+        "destination": { "type": "string", "description": "The destination." },
+        "days": { "type": "array", "items": { "type": "string" }, "description": "Days of the week (e.g., ['Monday', 'Wednesday'])." },
+        "time": { "type": "string", "description": "The time of day (e.g., '08:00')." },
+        "active": { "type": "boolean", "description": "Whether the recurring trip is active." }
+      },
+      "required": ["userId", "role", "origin", "destination", "days", "time", "active"]
+    },
+    "Ride": {
+      "title": "Ride Details",
+      "description": "Information about a posted carpooling trip.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique ID of the ride." },
+        "driverId": { "type": "string", "description": "The ID of the driver." },
+        "driverName": { "type": "string", "description": "The name of the driver." },
+        "origin": { "type": "string", "description": "The starting location of the ride." },
+        "destination": { "type": "string", "description": "The destination of the ride." },
+        "departureTime": { "type": "string", "format": "date-time", "description": "The scheduled departure time." },
+        "availableSeats": { "type": "integer", "description": "The number of available seats." },
+        "totalSeats": { "type": "integer", "description": "The total number of seats in the vehicle." },
+        "pricePerSeat": { "type": "number", "description": "The cost per seat for the ride." },
+        "status": { "type": "string", "enum": ["open", "full", "completed", "cancelled"], "description": "The current status of the ride." },
+        "riders": { "type": "array", "items": { "type": "string" }, "description": "List of rider IDs who have joined the ride." },
+        "carbonImpact": { "type": "number", "description": "Estimated carbon saving for this ride (kg)." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the ride was posted." }
+      },
+      "required": ["driverId", "origin", "destination", "departureTime", "availableSeats", "pricePerSeat", "status"]
+    },
+    "Message": {
+      "title": "In-App Message",
+      "description": "A message sent between users regarding a ride.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique ID of the message." },
+        "rideId": { "type": "string", "description": "The ID of the ride this message is about." },
+        "senderId": { "type": "string", "description": "The ID of the sender." },
+        "receiverId": { "type": "string", "description": "The ID of the receiver." },
+        "content": { "type": "string", "description": "The text content of the message." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the message was sent." }
+      },
+      "required": ["rideId", "senderId", "receiverId", "content", "timestamp"]
+    },
+    "Review": {
+      "title": "User Review",
+      "description": "A rating and review left by one user for another after a ride.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique ID of the review." },
+        "rideId": { "type": "string", "description": "The ID of the ride." },
+        "reviewerId": { "type": "string", "description": "The ID of the user leaving the review." },
+        "revieweeId": { "type": "string", "description": "The ID of the user being reviewed." },
+        "rating": { "type": "integer", "description": "The rating given (1-5)." },
+        "comment": { "type": "string", "description": "The review comment." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the review was left." }
+      },
+      "required": ["rideId", "reviewerId", "revieweeId", "rating", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profile data." },
+    "/rides/{rideId}": { "schema": "Ride", "description": "Ride sharing data." },
+    "/rides/{rideId}/messages/{messageId}": { "schema": "Message", "description": "Messages for a specific ride." },
+    "/reviews/{reviewId}": { "schema": "Review", "description": "User reviews and ratings." },
+    "/recurringTrips/{tripId}": { "schema": "RecurringTrip", "description": "User recurring commute schedules." }
+  }
+}

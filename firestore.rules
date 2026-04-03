@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Document ID: {userId}
+    // Fields: uid, displayName, email, photoURL, role, isVerified, rating, totalRides, carbonSaved, createdAt
+    //
+    // Collection: rides
+    // Document ID: {rideId}
+    // Fields: id, driverId, driverName, origin, destination, departureTime, availableSeats, totalSeats, pricePerSeat, status, riders, carbonImpact, createdAt
+    //
+    // Collection: rides/{rideId}/messages
+    // Document ID: {messageId}
+    // Fields: id, rideId, senderId, receiverId, content, timestamp
+    //
+    // Collection: reviews
+    // Document ID: {reviewId}
+    // Fields: id, rideId, reviewerId, revieweeId, rating, comment, timestamp
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "nareshaspire45@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'email', 'role', 'isVerified']) &&
+             data.uid is string && data.displayName is string && data.email is string &&
+             data.role in ['driver', 'rider', 'both'] && data.isVerified is bool &&
+             (!('points' in data) || data.points is int) &&
+             (!('badges' in data) || data.badges is list) &&
+             (!('carbonSaved' in data) || data.carbonSaved is number);
+    }
+
+    function isValidRecurringTrip(data) {
+      return data.keys().hasAll(['userId', 'role', 'origin', 'destination', 'days', 'time', 'active']) &&
+             data.userId is string && data.role in ['driver', 'rider'] &&
+             data.origin is string && data.destination is string &&
+             data.days is list && data.time is string && data.active is bool;
+    }
+
+    function isValidRide(data) {
+      return data.keys().hasAll(['driverId', 'origin', 'destination', 'departureTime', 'availableSeats', 'pricePerSeat', 'status']) &&
+             data.driverId is string && data.origin is string && data.destination is string &&
+             data.availableSeats is int && data.pricePerSeat is number &&
+             data.status in ['open', 'full', 'completed', 'cancelled'];
+    }
+
+    // Rules
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /recurringTrips/{tripId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidRecurringTrip(request.resource.data);
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && isValidRecurringTrip(request.resource.data);
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /rides/{rideId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidRide(request.resource.data) && request.resource.data.driverId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        (request.auth.uid == resource.data.driverId) || // Driver can update
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['riders', 'availableSeats'])) // Riders can join
+      );
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.driverId;
+    }
+
+    match /rides/{rideId}/messages/{messageId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == get(/databases/$(database)/documents/rides/$(rideId)).data.driverId ||
+        request.auth.uid in get(/databases/$(database)/documents/rides/$(rideId)).data.riders
+      );
+      allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.reviewerId == request.auth.uid;
+    }
+  }
+}

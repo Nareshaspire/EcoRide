@@ -1,0 +1,25 @@
+{
+  "name": "EcoRide - Eco-Friendly Ride Sharing",
+  "short_name": "EcoRide",
+  "description": "Share rides, save the planet. Eco-friendly carpooling with carbon tracking.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f0fdf4",
+  "theme_color": "#059669",
+  "orientation": "portrait-primary",
+  "categories": ["transportation", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

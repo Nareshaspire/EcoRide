@@ -19,6 +19,10 @@ service cloud.firestore {
     // Collection: reviews
     // Document ID: {reviewId}
     // Fields: id, rideId, reviewerId, revieweeId, rating, comment, timestamp
+    //
+    // Collection: notifications
+    // Document ID: {notificationId}
+    // Fields: userId, type, message, rideId, read, createdAt
     // ===============================================================
 
     // Helper Functions
@@ -42,7 +46,8 @@ service cloud.firestore {
              data.role in ['driver', 'rider', 'both'] && data.isVerified is bool &&
              (!('points' in data) || data.points is int) &&
              (!('badges' in data) || data.badges is list) &&
-             (!('carbonSaved' in data) || data.carbonSaved is number);
+             (!('carbonSaved' in data) || data.carbonSaved is number) &&
+             (!('sosContacts' in data) || data.sosContacts is list);
     }
 
     function isValidRecurringTrip(data) {
@@ -74,12 +79,13 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
+    // Rides update: driver can update, riders can join/leave
     match /rides/{rideId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidRide(request.resource.data) && request.resource.data.driverId == request.auth.uid;
       allow update: if isAuthenticated() && (
         (request.auth.uid == resource.data.driverId) || // Driver can update
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['riders', 'availableSeats'])) // Riders can join
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['riders', 'availableSeats', 'status'])) // Riders can join/leave
       );
       allow delete: if isAuthenticated() && request.auth.uid == resource.data.driverId;
     }
@@ -95,6 +101,12 @@ service cloud.firestore {
     match /reviews/{reviewId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.resource.data.reviewerId == request.auth.uid;
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
   }
 }
